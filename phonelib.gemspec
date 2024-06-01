@@ -26,7 +26,8 @@ Gem::Specification.new do |s|
     s.add_development_dependency 'nokogiri', '~> 1.10'
   end
   s.add_development_dependency 'pry'
-  s.add_development_dependency 'rspec', '= 2.14.1'
+  s.add_development_dependency 'pry-nav'
+  s.add_development_dependency 'rspec', '~> 3.13'
   s.add_development_dependency 'codeclimate-test-reporter', '~> 1.0.9'
   s.add_development_dependency 'simplecov'
   s.add_development_dependency 'benchmark-ips'

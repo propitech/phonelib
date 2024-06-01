@@ -7,17 +7,16 @@ require 'simplecov'
 SimpleCov.start
 
 describe Phonelib do
-  before(:all) do
-    Phonelib.override_phone_data = "spec/dummy/lib/override_phone_data.dat"
-  end
-
-  before(:each) do
-    Phonelib.default_country = nil
-    Phonelib.extension_separator = ';'
-    Phonelib.extension_separate_symbols = '#;'
-    Phonelib.parse_special = false
-    Phonelib.strict_check = false
-    Phonelib.vanity_conversion = false
+  before do
+    allow(Phonelib).to receive_messages(
+                         override_phone_data: "spec/dummy/lib/override_phone_data.dat",
+                         default_country: nil,
+                         extension_separator: ';',
+                         extension_separate_symbols: '#;',
+                         parse_special: false,
+                         strict_check: false,
+                         vanity_conversion: false
+                       )
   end
 
   it 'must be a Module' do
@@ -331,52 +330,49 @@ describe Phonelib do
     end
 
     it 'should be valid with default country set' do
-      Phonelib.default_country = :IL
+      allow(Phonelib).to receive_messages(default_country: :IL)
       phone = Phonelib.parse('542234567')
       expect(phone.valid?).to be true
     end
 
     it 'should be valid with wrong default country set' do
-      Phonelib.default_country = :UA
+      allow(Phonelib).to receive_messages(default_country: :UA)
       phone = Phonelib.parse('972542234567')
       expect(phone.valid?).to be true
     end
 
     it 'should not fail when no phone passed and default country set' do
-      Phonelib.default_country = :UA
+      allow(Phonelib).to receive_messages(default_country: :UA)
       phone = Phonelib.parse(nil)
       expect(phone.invalid?).to be true
     end
 
     it 'should be valid when number invalid for default country' do
-      Phonelib.default_country = :CN
+      allow(Phonelib).to receive_messages(default_country: :CN)
       phone = Phonelib.parse('+41 44 668 18 00')
       expect(phone.valid?).to be true
-      Phonelib.default_country = nil
+      # Phonelib.default_country = nil
     end
 
     it 'should be valid when number valid and several default countries' do
-      Phonelib.default_country = [:us, :pr, :as, :gu, :mp, :vi]
+      allow(Phonelib).to receive_messages(default_country: [:us, :pr, :as, :gu, :mp, :vi])
       phone = Phonelib.parse('7876711234')
       expect(phone.valid?).to be true
-      Phonelib.default_country = nil
     end
 
     it 'should be valid when number valid pr and several default countries without pr' do
-      Phonelib.default_country = [:us, :as, :gu, :mp, :vi]
+      allow(Phonelib).to receive_messages(default_country: [:us, :as, :gu, :mp, :vi])
       phone = Phonelib.parse('7876711234')
       expect(phone.possible?).to be true
       expect(phone.valid?).to be false
       expect(phone.countries).to eq(['US'])
-      Phonelib.default_country = nil
     end
 
     it 'should be valid when number not valid and several default countries' do
-      Phonelib.default_country = [:us, :as, :gu, :mp, :vi]
+      allow(Phonelib).to receive_messages(default_country: [:us, :as, :gu, :mp, :vi])
       phone = Phonelib.parse('123123')
       expect(phone.possible?).to be false
       expect(phone.valid?).to be false
-      Phonelib.default_country = nil
     end
   end
 
@@ -559,7 +555,6 @@ describe Phonelib do
 
   context 'issue #51, outdated data' do
     it 'should return TT as country' do
-      Phonelib.default_country = nil
       phone = Phonelib.parse('+18682739106')
       expect(phone.country).to eq('TT')
     end
@@ -651,7 +646,7 @@ describe Phonelib do
     end
 
     it 'should set different extension separator' do
-      Phonelib.extension_separator = '#'
+      allow(Phonelib).to receive_messages(extension_separator: '#')
 
       phone = Phonelib.parse('972542234567#123')
       expect(phone.valid?).to be true
@@ -662,7 +657,7 @@ describe Phonelib do
     end
 
     it 'should support nil separator' do
-      Phonelib.extension_separate_symbols = nil
+      allow(Phonelib).to receive_messages(extension_separate_symbols: nil)
 
       phone = Phonelib.parse('972542234567#123')
       expect(phone.original).to eq('972542234567#123')
@@ -673,12 +668,12 @@ describe Phonelib do
 
   context 'issue #59' do
     it 'should be invalid if parse_special is false' do
-      expect(Phonelib.parse_special).to be false
+      allow(Phonelib).to receive_messages(parse_special: false)
       expect(Phonelib.valid?("really1511@now.com")).to be false
     end
 
     it 'should be valid if parse_special is true' do
-      Phonelib.parse_special = true
+      allow(Phonelib).to receive_messages(parse_special: true)
       expect(Phonelib.parse_special).to be true
       expect(Phonelib.valid?("really1511@now.com")).to be true
     end
@@ -718,22 +713,18 @@ describe Phonelib do
   end
 
   context 'issue #70' do
-    after :each do
-      Phonelib.strict_check = false
-    end
-
     it 'should be invalid if strict_check is true' do
-      Phonelib.strict_check = true
+      allow(Phonelib).to receive_messages(strict_check: true)
       expect(Phonelib.valid?("1212a5551234")).to be false
     end
 
     it 'should be valid if strict_check is false' do
-      expect(Phonelib.strict_check).to be false
+      allow(Phonelib).to receive_messages(strict_check: false)
       expect(Phonelib.valid?("1212a5551234")).to be true
     end
 
     it 'should be valid if strict_check is true' do
-      Phonelib.strict_check = true
+      allow(Phonelib).to receive_messages(strict_check: true)
       expect(Phonelib.valid?("12125551234")).to be true
     end
   end
@@ -762,7 +753,7 @@ describe Phonelib do
     end
 
     it 'should try to detect when default country set but not passed' do
-      Phonelib.default_country = :de
+      allow(Phonelib).to receive_messages(default_country: :de)
       expect(Phonelib.parse('49157123456789').international).to eq('+49 15712 345 6789')
       expect(Phonelib.parse('49157123456789').valid?).to be false
       expect(Phonelib.parse('491521234567').international).to eq('+49 491 521234567')
@@ -772,10 +763,10 @@ describe Phonelib do
 
   context 'issue #75' do
     it 'should return e164 with country code' do
-      Phonelib.default_country = :us
+      allow(Phonelib).to receive_messages(default_country: :us)
       expect(Phonelib.parse('7876711234').e164).to eq('+17876711234')
       expect(Phonelib.parse('7876711234').valid?).to be false
-      Phonelib.default_country = :pr
+      allow(Phonelib).to receive_messages(default_country: :pr)
       expect(Phonelib.parse('7876711234').e164).to eq('+17876711234')
       expect(Phonelib.parse('7876711234').valid?).to be true
     end
@@ -789,7 +780,7 @@ describe Phonelib do
 
   context 'issues #76 and #78' do
     it 'should parse with right countries with default country' do
-      Phonelib.default_country = :us
+      allow(Phonelib).to receive_messages(default_country: :us)
 
       expect(Phonelib.parse('+6465550123').e164).to eq('+6465550123')
       expect(Phonelib.parse('+47 904 48 617').country).to eq('NO')
@@ -799,7 +790,7 @@ describe Phonelib do
 
   context 'issues ##81' do
     it 'should not raise errors for non-string inputs' do
-      Phonelib.default_country = :nz
+      allow(Phonelib).to receive_messages(default_country: :nz)
 
       expect{Phonelib.parse(6421555444)}.to_not raise_error
     end
@@ -807,9 +798,8 @@ describe Phonelib do
 
   context 'issue #83' do
     it 'should not throw error' do
-      Phonelib.strict_check = true
+      allow(Phonelib).to receive_messages(strict_check: true)
       expect{Phonelib.parse(';')}.not_to raise_error
-      Phonelib.strict_check = false
     end
   end
 
@@ -836,15 +826,13 @@ describe Phonelib do
     end
 
     it 'should validate right with strict and sanitize only first +' do
-      Phonelib.strict_check = true
+      allow(Phonelib).to receive_messages(strict_check: true)
 
       expect(Phonelib.valid?('441684291707')).to be true
       expect(Phonelib.valid?('+441684291707')).to be true
       expect(Phonelib.valid?('+4416842917076')).to be false
       expect(Phonelib.valid?('+441684291707x')).to be false
       expect(Phonelib.valid?('+441684291707xxxxxxxxxxxxxxxxxasdasadadas')).to be false
-
-      Phonelib.strict_check = false
     end
   end
 
@@ -889,7 +877,7 @@ describe Phonelib do
 
   context 'issue #90' do
     it 'should return same results' do
-      Phonelib.default_country = 'US'
+      allow(Phonelib).to receive_messages(default_country: 'US')
       number = '4035566466'
       expect(Phonelib.possible?(number)).to be true
       expect(Phonelib.parse(number).possible?).to be true
@@ -899,12 +887,12 @@ describe Phonelib do
 
   context 'issue #100 - for country NO' do
     cell_numbers = [
-        # Control examples
-        '95098471', '41044927', '92859554',
-        # Numbers starting with 47 without problems
-        '47465724', '47944424', '47898180',
-        # Numers starting with 471 with problems
-        '47144752', '47152183', '47140633'
+      # Control examples
+      '95098471', '41044927', '92859554',
+      # Numbers starting with 47 without problems
+      '47465724', '47944424', '47898180',
+      # Numers starting with 471 with problems
+      '47144752', '47152183', '47140633'
     ].freeze
 
     cell_numbers.each do |number|
@@ -938,7 +926,7 @@ describe Phonelib do
     end
 
     it 'should be invalid' do
-      Phonelib.vanity_conversion = true
+      allow(Phonelib).to receive_messages(vanity_conversion: true)
 
       p = Phonelib.parse('800-44-STERN', 'US')
       expect(p.valid?).to be true
@@ -970,7 +958,7 @@ describe Phonelib do
 
   context 'issue #107' do
     it 'should return consistent results for `valid_for_country?` when using the ' +
-       'instance method or the class method given the same country and phone number' do
+         'instance method or the class method given the same country and phone number' do
       phone_number = '0251092275'
       Phonelib.phone_data.keys.each do |country|
         expect(Phonelib.valid_for_country?(phone_number, country)).to(
@@ -991,7 +979,7 @@ describe Phonelib do
 
   context 'issue #133' do
     it 'should parse all numbers with extensions correctly' do
-      Phonelib.extension_separate_symbols = %w(ext ; # extension)
+      allow(Phonelib).to receive_messages(extension_separate_symbols: %w(ext ; # extension))
       ['+1 212-555-5555 ext. 5555', '+1 212-555-5555;5555', '+1 212-555-5555#5555',
        '+1 212-555-5555 extension 5555'].each do |num|
 
@@ -1005,13 +993,12 @@ describe Phonelib do
 
   context 'issue #135' do
     it 'should be valid numbers for poland with double country prefix' do
-      Phonelib.default_country = 'PL'
+      allow(Phonelib).to receive_messages(default_country: 'PL')
 
       %w(716287061 486287061).each do |phone|
         expect(Phonelib.parse(phone).valid?).to be true
         expect(Phonelib.parse("+48#{phone}").valid?).to be true
       end
-      Phonelib.default_country = nil
     end
   end
 
@@ -1033,12 +1020,10 @@ describe Phonelib do
 
   context 'issue #140' do
     it 'should be valid numbers for india with default country' do
-      Phonelib.default_country = 'IN'
+      allow(Phonelib).to receive_messages(default_country: 'IN')
 
       expect(Phonelib.parse('8340412345').valid?).to be true
       expect(Phonelib.parse('7970012345').valid?).to be true
-
-      Phonelib.default_country = nil
     end
   end
 
@@ -1047,8 +1032,7 @@ describe Phonelib do
     let(:parsed_number) { Phonelib.parse(raw_number) }
     let(:raw_number) { '281-330-8004' }
 
-    before { Phonelib.default_country = 'US' }
-    after { Phonelib.default_country = nil }
+    before { allow(Phonelib).to receive_messages(default_country: 'US') }
 
     context 'when given a number as a string' do
       it 'is equal' do
@@ -1084,12 +1068,12 @@ describe Phonelib do
 
   context 'issue #161' do
     before do
-      Phonelib.strict_double_prefix_check = false
+      allow(Phonelib).to receive_messages(strict_double_prefix_check: false)
     end
 
     context 'when strict_double_prefix_check is false' do
       it 'should be valid number outside the country' do
-        Phonelib.default_country = nil
+        allow(Phonelib).to receive_messages(default_country: nil)
         phone = Phonelib.parse('9111844757')
         expect(phone.valid?).to be true
         expect(Phonelib.valid?('919111844757')).to be true
@@ -1100,7 +1084,7 @@ describe Phonelib do
         expect(phone.valid?).to be true
         expect(Phonelib.valid?('919111844757')).to be true
 
-        Phonelib.default_country = 'IN'
+        allow(Phonelib).to receive_messages(default_country: 'IN')
         phone = Phonelib.parse('9111844757')
         expect(phone.valid?).to be true
       end
@@ -1108,11 +1092,11 @@ describe Phonelib do
 
     context 'when strict_double_prefix_check is true' do
       before do
-        Phonelib.strict_double_prefix_check = true
+        allow(Phonelib).to receive_messages(strict_double_prefix_check: true)
       end
 
       it 'should be invalid number outside the country' do
-        Phonelib.default_country = nil
+        allow(Phonelib).to receive_messages(default_country: nil)
         phone = Phonelib.parse('9111844757')
         expect(phone.valid?).to be false
         expect(Phonelib.valid?('919111844757')).to be true
@@ -1123,7 +1107,7 @@ describe Phonelib do
         expect(phone.valid?).to be true
         expect(Phonelib.valid?('919111844757')).to be true
 
-        Phonelib.default_country = 'IN'
+        allow(Phonelib).to receive_messages(default_country: 'IN')
         phone = Phonelib.parse('9111844757')
         expect(phone.valid?).to be true
       end
@@ -1216,28 +1200,23 @@ describe Phonelib do
     end
 
     it 'should be invalid when sanitize only valuable symbols' do
-      Phonelib.sanitize_regex = '[\.\-\(\) \;\+]'
+      allow(Phonelib).to receive_messages(sanitize_regex: '[\.\-\(\) \;\+]')
       p = Phonelib.parse('+1 (713) 555-1212 ; abc')
       expect(p.valid?).to be(true)
     end
 
     it 'should be valid when sanitize only valuable symbols' do
-      old = Phonelib.sanitize_regex
-      Phonelib.sanitize_regex = '[\.\-\(\) \;\+]'
+      allow(Phonelib).to receive_messages(sanitize_regex: '[\.\-\(\) \;\+]')
       p = Phonelib.parse('+1 (713) 555-1212')
       expect(p.valid?).to be(true)
-      Phonelib.sanitize_regex = old
     end
   end
 
   context 'issue #261' do
     before(:each) do
-      Phonelib.ignore_plus = false
+      allow(Phonelib).to receive_messages(ignore_plus: false)
     end
 
-    after(:each) do
-      Phonelib.ignore_plus = false
-    end
 
     it 'should parse as valid and change country when plus is not ignored' do
       p = Phonelib.parse("+850 2 381 7980", "US")
@@ -1246,7 +1225,7 @@ describe Phonelib do
     end
 
     it 'should parse as invalid when plus is ignored' do
-      Phonelib.ignore_plus = true
+      allow(Phonelib).to receive_messages(ignore_plus: true)
       p = Phonelib.parse("+850 2 381 7980", "US")
       expect(p.valid?).to be(false)
       expect(p.country).to be(nil)
@@ -1254,12 +1233,12 @@ describe Phonelib do
   end
 
   context 'additional_regexes' do
-    before(:each) do
+    before do
       Phonelib.additional_regexes = []
     end
 
-    after(:each) do
-      Phonelib.additional_regexes = []
+    after do
+      Phonelib.additional_regexes = nil
     end
 
     it 'should parse number as valid' do
@@ -1276,7 +1255,6 @@ describe Phonelib do
     end
 
     it 'dump correct' do
-      Phonelib.additional_regexes = []
       expect(Phonelib.additional_regexes).to eq({})
       Phonelib.add_additional_regex :us, Phonelib::Core::MOBILE, '0{10}'
       Phonelib.add_additional_regex :us, Phonelib::Core::MOBILE, '1{10}'
@@ -1287,6 +1265,7 @@ describe Phonelib do
       expect(Phonelib.additional_regexes).to eq({})
       Phonelib.additional_regexes = [[:us, :mobile, '0{10}'], [:us, :mobile, '1{10}']]
       expect(Phonelib.dump_additional_regexes).to eq([['US', :mobile, '0{10}'], ['US', :mobile, '1{10}']])
+      # expect(Phonelib.dump_additional_regexes).to eq([['US', :mobile, '0{10}'], ['US', :mobile, '1{10}']])
     end
   end
 
@@ -1302,12 +1281,8 @@ describe Phonelib do
   end
 
   context 'issue #278 multiple default countries' do
-    after(:each) do
-      Phonelib.default_country = nil
-    end
-
     it 'should be valid if only ca as default country' do
-      Phonelib.default_country = :ca
+      allow(Phonelib).to receive_messages(default_country: :ca)
       p1 = Phonelib.parse('6478864691')
       expect(p1.valid?).to be(true)
       expect(p1.countries).to eq(['CA'])
@@ -1317,7 +1292,7 @@ describe Phonelib do
     end
 
     it 'should be valid if only us and ca as default countries' do
-      Phonelib.default_country = [:us, :ca]
+      allow(Phonelib).to receive_messages(default_country: [:us, :ca])
       p1 = Phonelib.parse('6478864691')
       expect(p1.valid?).to be(true)
       expect(p1.countries).to eq(['CA'])
@@ -1327,7 +1302,7 @@ describe Phonelib do
     end
 
     it 'should be valid if only ca and us as default countries' do
-      Phonelib.default_country = [:ca, :us]
+      allow(Phonelib).to receive_messages(default_country: [:ca, :us])
       p1 = Phonelib.parse('6478864691')
       expect(p1.valid?).to be(true)
       expect(p1.countries).to eq(['CA'])
@@ -1363,18 +1338,18 @@ describe Phonelib do
       expect(phone.possible?).to be(true), "#{msg} not possible"
       expect(phone.impossible?).to be(false), "#{msg} not possible"
       expect(phone.valid_for_country?(country)).to be(true),
-             "#{msg} not valid for country"
+                                                   "#{msg} not valid for country"
       expect(phone.invalid_for_country?(country)).to be(false),
-             "#{msg} not valid for country"
+                                                     "#{msg} not valid for country"
 
       expect(phone.country).to eq(country), "#{msg} wrong country "
       if phone.type == Phonelib::Core::FIXED_OR_MOBILE
         expect([Phonelib::Core::FIXED_LINE, Phonelib::Core::MOBILE]).to\
             include(type)
-            "#{msg} wrong type #{phone.types}"
+        "#{msg} wrong type #{phone.types}"
       else
         expect(phone.types).to include(type),
-            "#{msg} wrong type #{phone.types}"
+                               "#{msg} wrong type #{phone.types}"
       end
     end
   end
