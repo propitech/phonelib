@@ -37,6 +37,7 @@ RSpec::Core::RakeTask.new(:spec) do |t|
     puts 'Rails not found! Running tests without Rails'
     t.pattern = 'spec/*_spec.rb'
   end
+  t.rspec_opts = "-r ./spec/helper"
 end
 task :default => :spec
 
